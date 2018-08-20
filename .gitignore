@@ -1,0 +1,23 @@
+syntax:regexp
+
+
+syntax: glob
+.vagrant/
+logs/*
+**/css/dist/**
+**/node_modules/*
+.DS_Store
+settings.local.js
+*.sublime-workspace
+*.sublime-project
+deploy.retry
+coverage.*
+lib-cov
+package-lock.json
+.tern-port
+.#*w
+*~
+*#
+.#*
+*.log
+**/test/temp/data/*
