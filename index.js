@@ -146,11 +146,13 @@ module.exports = class RedisConfigManager extends EventEmitter {
         value.last_updated = new Date().getTime();
         const serialized = JSON.stringify(value);
         await this.cmd.hset(this.options.hashKey, key, serialized);
-        this.emit('debug', `getConfig ${this.options.hashKey}, ${key}, ${serialized}`);
+        return true;
+        this.emit('debug', `setConfig ${this.options.hashKey}, ${key}, ${serialized}`);
     }
 
     async delConfig (key) {
         await this.cmd.hdel(this.options.hashKey, key);
+        return true;
     }
 
     async loadFixtureData () {
@@ -164,4 +166,4 @@ module.exports = class RedisConfigManager extends EventEmitter {
             self.emit('debug',`Fixture Data loaded for ${self.options.label }: ${key}`);
         }
     }
-}
+};
