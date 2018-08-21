@@ -1,4 +1,4 @@
-# redis-config-manager
+# redis-config-manager [![Build Status](https://travis-ci.org/mirusresearch/redis-config-manager.svg?branch=master)](https://travis-ci.org/mirusresearch/catbox-disk)
 A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON serialized strings under [hash](https://redis.io/commands#hash) subkeys.
 
 ### Features:
