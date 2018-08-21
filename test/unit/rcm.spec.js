@@ -7,6 +7,7 @@ const TESTKEYPREFIX = 'test-key-';
 const sources = {
     label: 'test',
     scanCount : 10,
+    hashKeyPrefix: 'weirdo-hash-prefix-test',
     hashKey: TESTSRC,
     client: {
         client_override: require('redis-mock').createClient(),

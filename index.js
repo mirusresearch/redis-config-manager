@@ -1,15 +1,17 @@
 const EventEmitter = require('events');
-const HASHPREFIX = 'redis-config-manager:';
 
 module.exports = class RedisConfigManager extends EventEmitter {
 
     constructor (params){
         super();
-
+        if (!params.hashKey){
+            throw (new Error('param.hashKey string required'));
+        }
         // general configuration
         const paramDefaults = {
             label:`NO-LABEL RedisConfigManager Instance`,
             raygun: () => {},
+            hashKeyPrefix : 'redis-config-manager:',
             hashKey: undefined,
             scanCount: 1000,
             refreshInterval: 1000*15,
@@ -33,7 +35,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
         delete params.client;
 
         this.options = Object.assign({},paramDefaults,params);
-        this.options.hashKey = `${HASHPREFIX}${this.options.hashKey}`;
+        this.options.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
 
         this.raygun = this.options.raygun;
 
