@@ -42,6 +42,11 @@ test('GET a config', async t => {
     t.is(payload.foo, 'quux');
 });
 
+test('DELETE a config', async t => {
+    const result = await RCM.delConfig(`${TESTKEYPREFIX}0`);
+    t.true(result);
+});
+
 test('get all config keys', async t => {
     const range =[...Array(TESTKEYCOUNT).keys()];
     const promises = range.map( idx => {
@@ -50,9 +55,4 @@ test('get all config keys', async t => {
     await Promise.all(promises);
     await RCM.keyRefresh();
     t.is(t.context.rcm.activeConfigKeys.size, TESTKEYCOUNT);
-});
-
-test('DELETE a config', async t => {
-    const result = await RCM.delConfig(`${TESTKEYPREFIX}0`);
-    t.true(result);
 });
