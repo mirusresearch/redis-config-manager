@@ -3,7 +3,7 @@ A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON seri
 
 ### Features:
 - Stores a regularly refreshed local [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) in memory of all available keys `.activeConfigKeys`
-- Uses non-blocking [HSCAN](https://redis.io/commands/hscan) commands to get the list of hash keys 
+- Uses non-blocking [HSCAN](https://redis.io/commands/hscan) commands to get the list of hash keys
 - Uses [node-redis](https://github.com/NodeRedis/node_redis) module under the hood for its redis client
 - Uses [redis-mock](https://github.com/yeahoffline/redis-mock) for local testing without a redis instance
 
@@ -20,10 +20,10 @@ const RedisConfigManager = require('redis-config-manager');
 const source = {
     label: 'rando-name',            // generic name for this instance used in testing
     scanCount : 1000,               // max number of hash subkeys per HSCAN operation
-    hashKey: 'rando-key-suffix',   // Suffix used in the hash key storing the data    
+    hashKey: 'rando-key-suffix',   // Suffix used in the hash key storing the data
     client: {
         host: '127.0.0.1',
-        port: 6379 
+        port: 6379
         // any other redis client-specific parameters
     },
 };
@@ -44,7 +44,7 @@ await RCM.setConfig('foo',{bar:'quux'});
 | `.activeConfigKeys`| Returns a Set of most recently refereshed key names | `Set` | No |
 
 ### `source` object properties
-_All are optional unless noted otherwise_
+_All are optional unless otherwise noted_
 
 | Property  |Type| Required | Default   | Description |
 |-----------|----|----------|-----------|-------------|
