@@ -16,11 +16,6 @@ const RCM = new RedisConfigManager(sources);
 
 test.before(async t => {
     await RCM.init();
-//     const range =[...Array(TESTKEYCOUNT).keys()];
-//     const promises = range.map( idx => {
-//         return t.context.rcm.setConfig(`${TESTKEYPREFIX}${idx}`, {foo:"bar", idx});
-//     });
-//     await Promise.all(promises);
 });
 
 test.beforeEach(async t =>{
