@@ -58,3 +58,11 @@ _All are optional unless otherwise noted_
 | `client.module_override` | `Function` | | `undefined` | replaces built-in `require('node_redis')` (maybe a new branch, custom version you're using)|
 | `client.client_override` | `Function` | | `undefined` | Re-use an existing `node_redis` client instance rather than using its own. (used during testing with [redis-mock](https://github.com/yeahoffline/redis-mock))|
 
+### Contributions & Development:
+Install with dev packages and run `yarn test` or `npm test`
+
+PRs are welcome.
+
+
+###TODO:
+Write some todos.
