@@ -5,13 +5,16 @@ const TESTSRC = 'super-dope-test';
 const TESTKEYCOUNT = 100;
 const TESTKEYPREFIX = 'test-key-';
 const sources = {
-    label: 'test',
+    label: 'test-instance',
     scanCount : 10,
     hashKeyPrefix: 'weirdo-hash-prefix-test',
     hashKey: TESTSRC,
     client: {
         client_override: require('redis-mock').createClient(),
     },
+    listeners : {
+        // debug : (...args) => { console.log(...args) }
+    }
 };
 const RCM = new RedisConfigManager(sources);
 

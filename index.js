@@ -35,11 +35,10 @@ module.exports = class RedisConfigManager extends EventEmitter {
         delete params.client;
 
         this.options = Object.assign({},paramDefaults,params);
-        this.options.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
-
         this.raygun = this.options.raygun;
 
         // local state
+        this.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
         this.activeConfigKeys = new Set([]);
         this.activeConfigKeysLastUpdate = null;
     }
@@ -123,7 +122,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
         let allKeys = [];
         while (cursor !== '0') {
             let found;
-            [cursor, found] = await self.cmd.hscan(self.options.hashKey, parseInt(cursor || '0'), 'count', self.options.scanCount);
+            [cursor, found] = await self.cmd.hscan(self.hashKey, parseInt(cursor || '0'), 'count', self.options.scanCount);
             let scanKeys = found?found.filter((element, idx) => idx % 2 === 0):[];
             allKeys = allKeys.concat(scanKeys);
         }
@@ -139,21 +138,21 @@ module.exports = class RedisConfigManager extends EventEmitter {
     async getConfig (key) {
         this.emit('debug', `getConfig: ${key}`);
 
-        const json = await this.cmd.hget(this.options.hashKey, key);
-        this.emit('debug', `getConfig ${this.options.hashKey}, ${key}, ${json}`);
+        const json = await this.cmd.hget(this.hashKey, key);
+        this.emit('debug', `getConfig ${this.hashKey}, ${key}, ${json}`);
         return JSON.parse(json);
     }
 
     async setConfig (key, value) {
         value.last_updated = new Date().getTime();
         const serialized = JSON.stringify(value);
-        await this.cmd.hset(this.options.hashKey, key, serialized);
+        await this.cmd.hset(this.hashKey, key, serialized);
+        this.emit('debug', `setConfig ${this.hashKey}, ${key}, ${serialized}`);
         return true;
-        this.emit('debug', `setConfig ${this.options.hashKey}, ${key}, ${serialized}`);
     }
 
     async delConfig (key) {
-        await this.cmd.hdel(this.options.hashKey, key);
+        await this.cmd.hdel(this.hashKey, key);
         return true;
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "redis-config-manager",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "thin wrapper around redis hashes for storing json serialized data",
   "main": "index.js",
   "repository": "https://github.com/mirusresearch/redis-config-manager",
