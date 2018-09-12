@@ -8,7 +8,7 @@ A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON seri
 - Uses [redis-mock](https://github.com/yeahoffline/redis-mock) for local testing without a redis instance
 
 ### Installation:
-Go into your no
+Go into your 
 `yarn add redis-config-manager`
 or
 `npm install redis-config-manager`
