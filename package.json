@@ -1,20 +1,27 @@
 {
-  "name": "redis-config-manager",
-  "version": "1.0.3",
-  "description": "thin wrapper around redis hashes for storing json serialized data",
-  "main": "index.js",
-  "repository": "https://github.com/mirusresearch/redis-config-manager",
-  "author": "EyePulp <eyepulp@eyepulp.net>",
-  "license": "MIT",
-  "dependencies": {
-    "redis": "^2.8.0",
-    "redis-mock": "^0.32.0"
-  },
-  "scripts": {
-    "test": "cross-env NODE_ENV=testing ava test/unit"
-  },
-  "devDependencies": {
-    "ava": "^0.25.0",
-    "cross-env": "^5.2.0"
-  }
+    "name": "redis-config-manager",
+    "version": "1.0.4",
+    "keywords": [
+        "redis",
+        "nodejs",
+        "confirguration",
+        "json",
+        "hash keys"
+    ],
+    "description": "thin wrapper around redis hashes for storing json serialized data",
+    "main": "index.js",
+    "repository": "https://github.com/mirusresearch/redis-config-manager",
+    "author": "EyePulp <eyepulp@eyepulp.net>",
+    "license": "MIT",
+    "dependencies": {
+        "redis": "^2.8.0",
+        "redis-mock": "^0.32.0"
+    },
+    "scripts": {
+        "test": "cross-env NODE_ENV=testing ava test/unit"
+    },
+    "devDependencies": {
+        "ava": "^0.25.0",
+        "cross-env": "^5.2.0"
+    }
 }
