@@ -1,41 +1,37 @@
 const EventEmitter = require('events');
 
 module.exports = class RedisConfigManager extends EventEmitter {
-
-    constructor (params){
+    constructor(params) {
         super();
-        if (!params.hashKey){
-            throw (new Error('param.hashKey string required'));
+        if (!params.hashKey) {
+            throw new Error('param.hashKey string required');
         }
         // general configuration
         const paramDefaults = {
-            label:`NO-LABEL RedisConfigManager Instance`,
-            raygun: () => {},
-            hashKeyPrefix : 'redis-config-manager:',
+            label: `NO-LABEL RedisConfigManager Instance`,
+            hashKeyPrefix: 'redis-config-manager:',
             hashKey: undefined,
             scanCount: 1000,
-            refreshInterval: 1000*15,
+            refreshInterval: 1000 * 15,
             fixtureData: undefined,
             listeners: {
-                // 'debug' : (...args) => { console.log(...args) },
-                'debug' : () => { },
-                'ready' : (...args) => { console.log(...args) },
-                'error' : (...args) => { console.error(...args) },
-            },
+                debug: console.log,
+                ready: console.log,
+                error: console.error
+            }
         };
         const redisDefaults = {
-            host:"127.0.0.1",
-            port:6379,
-            db:0,
+            host: '127.0.0.1',
+            port: 6379,
+            db: 0,
             module_override: undefined,
-            client_override: undefined,
+            client_override: undefined
         };
 
-        this.redisParams = Object.assign({},redisDefaults,params.client);
+        this.redisParams = Object.assign({}, redisDefaults, params.client);
         delete params.client;
 
-        this.options = Object.assign({},paramDefaults,params);
-        this.raygun = this.options.raygun;
+        this.options = Object.assign({}, paramDefaults, params);
 
         // local state
         this.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
@@ -43,77 +39,80 @@ module.exports = class RedisConfigManager extends EventEmitter {
         this.activeConfigKeysLastUpdate = null;
     }
 
-    async init () {
+    async init() {
         this.initEventListeners();
         await this.initRedisClient();
         this.initAsyncCommands();
         await this.loadFixtureData();
         await this.initKeyRefresh();
-        this.emit('debug','---> init completed');
+        this.emit('debug', '---> init completed');
     }
 
-    initEventListeners () {
-        if (!this.options.listeners){
+    initEventListeners() {
+        if (!this.options.listeners) {
             return;
         }
         for (const key of Object.keys(this.options.listeners)) {
-            this.on(key,this.options.listeners[key]);
+            this.on(key, this.options.listeners[key]);
         }
     }
 
-    isConnected () {
+    isConnected() {
         return this.redisClient && this.redisClient.connected;
     }
 
-    initRedisClient (){
+    initRedisClient() {
         const self = this;
         const redisModule = this.redisParams.module_override || require('redis');
         this.redisClient = this.redisParams.client_override || redisModule.createClient(this.redisParams);
 
-        return new Promise((resolve,reject)=>{
+        return new Promise((resolve, reject) => {
             this.redisClient
                 .on('error', error => {
-                    const msg =  `Redis error => ${self.options.label} : ${error.message}`;
-                    self.raygun(msg,null,self.options);
-                    // self.emit('error',`Redis error => ${self.options.label} : ${error.message}`);
+                    const msg = `Redis error => ${self.options.label} : ${error.message}`;
+                    self.emit('error', msg);
                 })
-                .on('ready', ()=> {
-                    if (this.options.db){
+                .on('ready', () => {
+                    if (this.options.db) {
                         self.redisClient.select(self.redisParams.db);
                     }
-                    let msg = `Redis connected => ${self.options.label} to redis://${self.redisClient.address || 'mock_redis_instance'}`;
+                    let msg = `Redis connected => ${self.options.label} to redis://${self.redisClient
+                        .address || 'mock_redis_instance'}`;
                     if (this.options.db > 0) {
                         msg += `/db${self.redisParams.db}`;
                     }
                     if (self.redisClient.server_info && self.redisClient.server_info.redis_version) {
                         msg += ` v${self.redisClient.server_info.redis_version}`;
                     }
-                    self.emit('ready',msg);
+                    self.emit('ready', msg);
                     resolve();
                 });
-            if (this.isConnected()){ // handles pre-existing clients that may already be connected;
+            if (this.isConnected()) {
+                // handles pre-existing clients that may already be connected;
                 resolve();
             }
         });
     }
 
-    initAsyncCommands () {
+    initAsyncCommands() {
         const self = this;
-        const {promisify} = require('util');
-        const commands = ['ping','hget','hset','hdel','hscan'];
-        this.cmd = commands.reduce((o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }), {});
+        const { promisify } = require('util');
+        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan'];
+        this.cmd = commands.reduce(
+            (o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }),
+            {}
+        );
     }
 
-
-    async initKeyRefresh () {
+    async initKeyRefresh() {
         const self = this;
         await self.keyRefresh();
         setInterval(self.keyRefresh.bind(self), self.options.refreshInterval);
     }
 
-    async keyRefresh () {
+    async keyRefresh() {
         const self = this;
-        if (!self.isConnected()){
+        if (!self.isConnected()) {
             self.emit('error', `No connection for ${self.options.label}, not updating keys...`);
             return;
         }
@@ -122,20 +121,25 @@ module.exports = class RedisConfigManager extends EventEmitter {
         let allKeys = [];
         while (cursor !== '0') {
             let found;
-            [cursor, found] = await self.cmd.hscan(self.hashKey, parseInt(cursor || '0'), 'count', self.options.scanCount);
-            let scanKeys = found?found.filter((element, idx) => idx % 2 === 0):[];
+            [cursor, found] = await self.cmd.hscan(
+                self.hashKey,
+                parseInt(cursor || '0'),
+                'count',
+                self.options.scanCount
+            );
+            let scanKeys = found ? found.filter((element, idx) => idx % 2 === 0) : [];
             allKeys = allKeys.concat(scanKeys);
         }
         self.activeConfigKeys = new Set(allKeys);
         this.activeConfigKeysLastUpdate = new Date();
-        self.emit('debug', `Config Keys updated for ${self.options.label }:`, self.activeConfigKeys );
+        self.emit('debug', `Config Keys updated for ${self.options.label}:`, self.activeConfigKeys);
     }
 
-    hasConfigKey (key) {
+    hasConfigKey(key) {
         return this.activeConfigKeys.has(key);
     }
 
-    async getConfig (key) {
+    async getConfig(key) {
         this.emit('debug', `getConfig: ${key}`);
 
         const json = await this.cmd.hget(this.hashKey, key);
@@ -143,7 +147,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
         return JSON.parse(json);
     }
 
-    async setConfig (key, value) {
+    async setConfig(key, value) {
         value.last_updated = new Date().getTime();
         const serialized = JSON.stringify(value);
         await this.cmd.hset(this.hashKey, key, serialized);
@@ -151,20 +155,20 @@ module.exports = class RedisConfigManager extends EventEmitter {
         return true;
     }
 
-    async delConfig (key) {
+    async delConfig(key) {
         await this.cmd.hdel(this.hashKey, key);
         return true;
     }
 
-    async loadFixtureData () {
+    async loadFixtureData() {
         const self = this;
         if (!this.options.fixtureData) {
             return;
         }
         for (const key of Object.keys(this.options.fixtureData)) {
             const config = this.options.fixtureData[key];
-            await self.setConfig(key,config);
-            self.emit('debug',`Fixture Data loaded for ${self.options.label }: ${key}`);
+            await self.setConfig(key, config);
+            self.emit('debug', `Fixture Data loaded for ${self.options.label}: ${key}`);
         }
     }
 };
