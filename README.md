@@ -50,7 +50,7 @@ _All are optional unless otherwise noted_
 | Property  |Type| Required | Default   | Description |
 |-----------|----|----------|-----------|-------------|
 |`label`   | `String` |  |`NO-LABEL RedisConfigManager Instance` | Readable identifier for debugging. |
-|`hashKey` | `String` | **Yup**|`undefined`| Suffix to appended to `hashKeyPrefix` |
+|`hashKey` | `String` | **Yup**|`undefined`| Suffix to prepended to `hashKeyPrefix` |
 |`hashKeyPrefix` | `String` | |`redis-config-manager:`| Prefix for the hash key managed by this instance -- typically left as-is unless you have a pre-existing hash you want to use |
 |`scanCount`| `String` | | 1000 | Number of subkeys scanned per `HSCAN - see the [count option](https://redis.io/commands/scan#the-count-option) for details |
 |`refreshInterval`| `Integer`| | 15000 | Number of milliseconds between key refreshes |
