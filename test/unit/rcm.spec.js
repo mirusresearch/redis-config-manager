@@ -6,15 +6,15 @@ const TESTKEYCOUNT = 100;
 const TESTKEYPREFIX = 'test-key-';
 const sources = {
     label: 'test-instance',
-    scanCount : 10,
+    scanCount: 10,
     hashKeyPrefix: 'weirdo-hash-prefix-test',
     hashKey: TESTSRC,
     client: {
         client_override: require('redis-mock').createClient(),
     },
-    listeners : {
+    listeners: {
         // debug : (...args) => { console.log(...args) }
-    }
+    },
 };
 const RCM = new RedisConfigManager(sources);
 
@@ -22,16 +22,14 @@ test.before(async t => {
     await RCM.init();
 });
 
-test.beforeEach(async t =>{
+test.beforeEach(async t => {
     t.context.rcm = RCM;
 });
 
-test.after(t => {
-
-});
+test.after(t => {});
 
 test('SET a config', async t => {
-    const result = await RCM.setConfig(`${TESTKEYPREFIX}0`,{foo:"quux"} );
+    const result = await RCM.setConfig(`${TESTKEYPREFIX}0`, { foo: 'quux' });
     t.true(result);
 });
 
@@ -46,15 +44,21 @@ test('GET a config', async t => {
     t.is(payload.foo, 'quux');
 });
 
+test('GET multiple configs', async t => {
+    const payload = await RCM.getConfigs([`${TESTKEYPREFIX}0`, `${TESTKEYPREFIX}BADBADBAD`]);
+    t.is(payload[0].foo, 'quux');
+    t.is(payload[1], null);
+});
+
 test('DELETE a config', async t => {
     const result = await RCM.delConfig(`${TESTKEYPREFIX}0`);
     t.true(result);
 });
 
 test('get all config keys', async t => {
-    const range =[...Array(TESTKEYCOUNT).keys()];
-    const promises = range.map( idx => {
-        return RCM.setConfig(`${TESTKEYPREFIX}${idx}`, {foo:"bar", idx});
+    const range = [...Array(TESTKEYCOUNT).keys()];
+    const promises = range.map(idx => {
+        return RCM.setConfig(`${TESTKEYPREFIX}${idx}`, { foo: 'bar', idx });
     });
     await Promise.all(promises);
     await RCM.keyRefresh();

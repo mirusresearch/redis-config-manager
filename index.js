@@ -17,15 +17,15 @@ module.exports = class RedisConfigManager extends EventEmitter {
             listeners: {
                 debug: console.log,
                 ready: console.log,
-                error: console.error
-            }
+                error: console.error,
+            },
         };
         const redisDefaults = {
             host: '127.0.0.1',
             port: 6379,
             db: 0,
             module_override: undefined,
-            client_override: undefined
+            client_override: undefined,
         };
 
         this.redisParams = Object.assign({}, redisDefaults, params.client);
@@ -97,7 +97,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
     initAsyncCommands() {
         const self = this;
         const { promisify } = require('util');
-        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan'];
+        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan', 'hmget'];
         this.cmd = commands.reduce(
             (o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }),
             {}
@@ -142,9 +142,19 @@ module.exports = class RedisConfigManager extends EventEmitter {
     async getConfig(key) {
         this.emit('debug', `getConfig: ${key}`);
 
-        const json = await this.cmd.hget(this.hashKey, key);
-        this.emit('debug', `getConfig ${this.hashKey}, ${key}, ${json}`);
-        return JSON.parse(json);
+        const result = await this.cmd.hget(this.hashKey, key);
+        this.emit('debug', `getConfig ${this.hashKey}, ${key}, ${result}`);
+        return JSON.parse(result);
+    }
+
+    async getConfigs(keys) {
+        this.emit('debug', `getConfigs: ${keys}`);
+        if (!Array.isArray(keys)) {
+            throw new Error(`getConfigs requires an array of keys be passed in`);
+        }
+        const results = await this.cmd.hmget(this.hashKey, keys);
+        this.emit('debug', `getConfigs ${this.hashKey}, ${keys}`);
+        return results.map(r => (r ? JSON.parse(r) : r));
     }
 
     async setConfig(key, value) {

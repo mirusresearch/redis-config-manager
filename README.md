@@ -8,7 +8,7 @@ A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON seri
 - Uses [redis-mock](https://github.com/yeahoffline/redis-mock) for local testing without a redis instance
 
 ### Installation:
-Go into your 
+Go into your
 `yarn add redis-config-manager`
 or
 `npm install redis-config-manager`
@@ -38,6 +38,7 @@ await RCM.setConfig('foo',{bar:'quux'});
 |`.init()`| Initialize the manager, redis connection, active keys, etc | Yes |
 |`.setConfig(key,value)` | JSON serializes js object of `value` and writes/overwrites the string hash subkey of `key`| `Boolean true` | Yes |
 |`.getConfig(key)` | If the string of `key` is a valid subkey to the hash, will return the JSON.parse value of the string value stored | `Object` | Yes |
+|`.getConfigs(keys)` | Provided an array of strings via the `keys` argument, will return an array of results in matching order as the keys.  When a non-null value exists for a key, JSON.parse is attempted | `Array` | Yes |
 |`.delConfig(key)` | Attempts to delete string subkey of `key` from the hash.  Missing keys produce no error | `Boolean` | Yes |
 | `.hasConfigKey(key)`| Checks the locally stored Set of `.activeConfigKeys` for a existence of a key | `Boolean` | No |
 | `.keyRefresh()` | Forces a refresh of `.activeConfigKeys` outside of the predefined refresh intervals | `undefined` | Yes |
