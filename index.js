@@ -1,8 +1,11 @@
 const EventEmitter = require('events');
+const _ = require('lodash');
 
 module.exports = class RedisConfigManager extends EventEmitter {
     constructor(params) {
         super();
+
+        params = _.clone(params); // avoid mucking up the original params;
         if (!params.hashKey) {
             throw new Error('param.hashKey string required');
         }
@@ -30,6 +33,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
 
         this.redisParams = Object.assign({}, redisDefaults, params.client);
         delete params.client;
+        // params = _.omit(params, ['client']);
 
         this.options = Object.assign({}, paramDefaults, params);
 

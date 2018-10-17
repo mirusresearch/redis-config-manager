@@ -1,6 +1,6 @@
 {
     "name": "redis-config-manager",
-    "version": "1.0.8",
+    "version": "1.0.10",
     "keywords": [
         "redis",
         "nodejs",
@@ -14,6 +14,7 @@
     "author": "EyePulp <eyepulp@eyepulp.net>",
     "license": "MIT",
     "dependencies": {
+        "lodash": "^4.17.11",
         "redis": "^2.8.0",
         "redis-mock": "^0.32.0"
     },

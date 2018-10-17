@@ -1,5 +1,5 @@
 import { serial as test } from 'ava';
-
+const _ = require('lodash');
 const RedisConfigManager = require('../../');
 const TESTSRC = 'super-dope-test';
 const TESTKEYCOUNT = 100;
@@ -16,6 +16,8 @@ const sources = {
         // debug : (...args) => { console.log(...args) }
     },
 };
+const dupedSources = _.clone(sources);
+
 const RCM = new RedisConfigManager(sources);
 
 test.before(async t => {
@@ -26,11 +28,15 @@ test.beforeEach(async t => {
     t.context.rcm = RCM;
 });
 
-test.after(t => {});
+test.after(t => { });
 
 test('SET a config', async t => {
     const result = await RCM.setConfig(`${TESTKEYPREFIX}0`, { foo: 'quux' });
     t.true(result);
+});
+
+test('Verify original params are not altered by instantiation', async t => {
+    t.true(_.isEqual(sources, dupedSources));
 });
 
 test('HAS a config key', async t => {
