@@ -18,6 +18,12 @@
         "redis": "^2.8.0",
         "redis-mock": "^0.32.0"
     },
+    "prettier": {
+        "singleQuote": true,
+        "semi": true,
+        "tabWidth": 4,
+        "printWidth": 115
+    },
     "scripts": {
         "test": "cross-env NODE_ENV=testing ava test/unit"
     },
