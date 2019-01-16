@@ -9,12 +9,14 @@ const sources = {
     scanCount: 10,
     hashKeyPrefix: 'weirdo-hash-prefix-test',
     hashKey: TESTSRC,
+    // disableLocalKeyStorage: true,
+    // useBlockingKeyRefresh: true,
     client: {
-        client_override: require('redis-mock').createClient(),
+        client_override: require('redis-mock').createClient()
     },
     listeners: {
         // debug : (...args) => { console.log(...args) }
-    },
+    }
 };
 const dupedSources = _.clone(sources);
 
@@ -28,7 +30,7 @@ test.beforeEach(async t => {
     t.context.rcm = RCM;
 });
 
-test.after(t => { });
+test.after(t => {});
 
 test('SET a config', async t => {
     const result = await RCM.setConfig(`${TESTKEYPREFIX}0`, { foo: 'quux' });

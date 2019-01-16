@@ -17,18 +17,20 @@ module.exports = class RedisConfigManager extends EventEmitter {
             scanCount: 1000,
             refreshInterval: 1000 * 15,
             fixtureData: undefined,
+            useBlockingKeyRefresh: false,
+            disableLocalKeyStorage: false,
             listeners: {
                 debug: console.log,
                 ready: console.log,
-                error: console.error,
-            },
+                error: console.error
+            }
         };
         const redisDefaults = {
             host: '127.0.0.1',
             port: 6379,
             db: 0,
             module_override: undefined,
-            client_override: undefined,
+            client_override: undefined
         };
 
         this.redisParams = Object.assign({}, redisDefaults, params.client);
@@ -48,7 +50,9 @@ module.exports = class RedisConfigManager extends EventEmitter {
         await this.initRedisClient();
         this.initAsyncCommands();
         await this.loadFixtureData();
-        await this.initKeyRefresh();
+        if (!this.options.disableLocalKeyStorage) {
+            await this.initKeyRefresh();
+        }
         this.emit('debug', '---> init completed');
     }
 
@@ -80,8 +84,8 @@ module.exports = class RedisConfigManager extends EventEmitter {
                     if (this.options.db) {
                         self.redisClient.select(self.redisParams.db);
                     }
-                    let msg = `Redis connected => ${self.options.label} to redis://${self.redisClient
-                        .address || 'mock_redis_instance'}`;
+                    let msg = `Redis connected => ${self.options.label} to redis://${self.redisClient.address ||
+                        'mock_redis_instance'}`;
                     if (this.options.db > 0) {
                         msg += `/db${self.redisParams.db}`;
                     }
@@ -101,7 +105,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
     initAsyncCommands() {
         const self = this;
         const { promisify } = require('util');
-        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan', 'hmget'];
+        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan', 'hmget', 'hkeys', 'hexists'];
         this.cmd = commands.reduce(
             (o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }),
             {}
@@ -110,8 +114,14 @@ module.exports = class RedisConfigManager extends EventEmitter {
 
     async initKeyRefresh() {
         const self = this;
-        await self.keyRefresh();
-        setInterval(self.keyRefresh.bind(self), self.options.refreshInterval);
+        let refreshFn = self.options.useBlockingKeyRefresh ? 'blockingKeyRefresh' : 'keyRefresh';
+        await self[refreshFn]();
+        setInterval(self[refreshFn].bind(self), self.options.refreshInterval);
+    }
+
+    async blockingKeyRefresh() {
+        const allKeys = await this.cmd.hkeys(this.hashKey);
+        this.activeConfigKeys = new Set(allKeys);
     }
 
     async keyRefresh() {
@@ -140,6 +150,9 @@ module.exports = class RedisConfigManager extends EventEmitter {
     }
 
     hasConfigKey(key) {
+        if (this.options.disableLocalKeyStorage) {
+            this.emit('error', `Local key storage disabled for ${this.options.label}`);
+        }
         return this.activeConfigKeys.has(key);
     }
 
