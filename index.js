@@ -159,7 +159,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
     async getConfig(key) {
         const result = await this.cmd.hget(this.hashKey, key);
         this.emit('debug', `getConfig: ${this.hashKey}, ${key}, ${result}`);
-        return JSON.parse(result);
+        return result ? JSON.parse(result) : result;
     }
 
     async getConfigs(keys) {
