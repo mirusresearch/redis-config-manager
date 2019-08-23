@@ -12,6 +12,9 @@ We're removing the local key storage and lookup capability - we kept running int
 - Uses [node-redis](https://github.com/NodeRedis/node_redis) module under the hood for its redis client
 - Uses [redis-mock](https://github.com/yeahoffline/redis-mock) for local testing without a redis instance
 
+### Requirements:
+Tested on `NodeJS 8.x` and higher 
+
 ### Installation:
 Go into your
 `yarn add redis-config-manager`
