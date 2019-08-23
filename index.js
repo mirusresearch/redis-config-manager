@@ -14,11 +14,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
             label: `NO-LABEL RedisConfigManager Instance`,
             hashKeyPrefix: 'redis-config-manager:',
             hashKey: undefined,
-            scanCount: 1000,
-            refreshInterval: 1000 * 15,
             fixtureData: undefined,
-            useBlockingKeyRefresh: false,
-            disableLocalKeyStorage: false,
             listeners: {
                 debug: console.log,
                 ready: console.log,
@@ -41,8 +37,6 @@ module.exports = class RedisConfigManager extends EventEmitter {
 
         // local state
         this.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
-        this.activeConfigKeys = new Set([]);
-        this.activeConfigKeysLastUpdate = null;
     }
 
     async init() {
@@ -50,9 +44,6 @@ module.exports = class RedisConfigManager extends EventEmitter {
         await this.initRedisClient();
         this.initAsyncCommands();
         await this.loadFixtureData();
-        if (!this.options.disableLocalKeyStorage) {
-            await this.initKeyRefresh();
-        }
         this.emit('debug', '---> init completed');
     }
 
@@ -110,50 +101,6 @@ module.exports = class RedisConfigManager extends EventEmitter {
             (o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }),
             {}
         );
-    }
-
-    async initKeyRefresh() {
-        const self = this;
-        let refreshFn = self.options.useBlockingKeyRefresh ? 'blockingKeyRefresh' : 'keyRefresh';
-        await self[refreshFn]();
-        setInterval(self[refreshFn].bind(self), self.options.refreshInterval);
-    }
-
-    async blockingKeyRefresh() {
-        const allKeys = await this.cmd.hkeys(this.hashKey);
-        this.activeConfigKeys = new Set(allKeys);
-    }
-
-    async keyRefresh() {
-        const self = this;
-        if (!self.isConnected()) {
-            self.emit('error', `No connection for ${self.options.label}, not updating keys...`);
-            return;
-        }
-        self.emit('debug', `Updating config keys for ${self.options.label} ...`);
-        let cursor;
-        let allKeys = [];
-        while (cursor !== '0') {
-            let found;
-            [cursor, found] = await self.cmd.hscan(
-                self.hashKey,
-                parseInt(cursor || '0'),
-                'count',
-                self.options.scanCount
-            );
-            let scanKeys = found ? found.filter((element, idx) => idx % 2 === 0) : [];
-            allKeys = allKeys.concat(scanKeys);
-        }
-        self.activeConfigKeys = new Set(allKeys);
-        this.activeConfigKeysLastUpdate = new Date();
-        self.emit('debug', `Config Keys updated for ${self.options.label}:`, self.activeConfigKeys);
-    }
-
-    hasConfigKey(key) {
-        if (this.options.disableLocalKeyStorage) {
-            this.emit('error', `Local key storage disabled for ${this.options.label}`);
-        }
-        return this.activeConfigKeys.has(key);
     }
 
     async getConfig(key) {
