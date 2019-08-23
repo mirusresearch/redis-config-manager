@@ -14,6 +14,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
             label: `NO-LABEL RedisConfigManager Instance`,
             hashKeyPrefix: 'redis-config-manager:',
             hashKey: undefined,
+            refreshInterval: 1000 * 15,
             fixtureData: undefined,
             listeners: {
                 debug: console.log,
@@ -37,6 +38,8 @@ module.exports = class RedisConfigManager extends EventEmitter {
 
         // local state
         this.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
+        this.activeConfigKeys = new Set([]);
+        this.activeConfigKeysLastUpdate = null;
     }
 
     async init() {
@@ -44,6 +47,8 @@ module.exports = class RedisConfigManager extends EventEmitter {
         await this.initRedisClient();
         this.initAsyncCommands();
         await this.loadFixtureData();
+        await this.initKeyRefresh();
+
         this.emit('debug', '---> init completed');
     }
 
@@ -96,11 +101,26 @@ module.exports = class RedisConfigManager extends EventEmitter {
     initAsyncCommands() {
         const self = this;
         const { promisify } = require('util');
-        const commands = ['ping', 'hget', 'hset', 'hdel', 'hscan', 'hmget', 'hkeys', 'hexists'];
+        const commands = ['ping', 'hget', 'hset', 'hdel', 'hmget', 'hkeys', 'hexists'];
         this.cmd = commands.reduce(
             (o, key) => ({ ...o, [key]: promisify(self.redisClient[key]).bind(self.redisClient) }),
             {}
         );
+    }
+
+    async initKeyRefresh() {
+        const self = this;
+        await self.keyRefresh();
+        setInterval(self.keyRefresh.bind(self), self.options.refreshInterval);
+    }
+
+    async keyRefresh() {
+        const allKeys = await this.cmd.hkeys(this.hashKey);
+        this.activeConfigKeys = new Set(allKeys);
+    }
+
+    hasConfigKey(key) {
+        return this.activeConfigKeys.has(key);
     }
 
     async getConfig(key) {

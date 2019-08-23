@@ -1,10 +1,6 @@
 # redis-config-manager [![Build Status](https://travis-ci.org/mirusresearch/redis-config-manager.svg?branch=master)](https://travis-ci.org/mirusresearch/redis-config-manager)
 A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON serialized strings under [hash](https://redis.io/commands#hash) subkeys.
 
-### Breaking changes for 1.2.x:
-We're removing the local key storage and lookup capability - we kept running into issues with the reliability of HSCAN over large key spaces. This is probably due to our implementation more than redis, but it was causing production issues.  We'll miss the cheap/fast syncronous lookup that `.activeConfigKeys` gave us, but we'll also avoid false negatives due to slow/failed refreshes of the config keys.  We should also get a smaller module footprint in memory without the local config key Set.
-
-
 ### Features:
 - Keeps your redis instance root namespace clean by storing everything under one hash key, with subkeys as your main identifier
 - Handles the JSON encode/decode cycle internally
@@ -47,9 +43,9 @@ await RCM.setConfig('foo',{bar:'quux'});
 |`.getConfig(key)` | If the string of `key` is a valid subkey to the hash, will return the JSON.parse value of the string value stored | `Object` | Yes |
 |`.getConfigs(keys)` | Provided an array of strings via the `keys` argument, will return an array of results in matching order as the keys.  When a non-null value exists for a key, JSON.parse is attempted | `Array` | Yes |
 |`.delConfig(key)` | Attempts to delete string subkey of `key` from the hash.  Missing keys produce no error | `Boolean` | Yes |
-| ~~`.hasConfigKey(key)`~~| Checks the locally stored Set of `.activeConfigKeys` for a existence of a key | `Boolean` | No | **Deprecated in v1.2.x** |
-| ~~`.keyRefresh()`~~ | Forces a refresh of `.activeConfigKeys` outside of the predefined refresh intervals | `undefined` | Yes | **Deprecated in v1.2.x** |
-| ~~`.activeConfigKeys`~~| Returns a Set of most recently refereshed key names | `Set` | No | **Deprecated in v1.2.x** |
+| `.hasConfigKey(key)`| Checks the locally stored Set of `.activeConfigKeys` for a existence of a key | `Boolean` | No |  |
+| `.keyRefresh()` | Forces a refresh of `.activeConfigKeys` outside of the predefined refresh intervals | `undefined` | Yes | |
+| `.activeConfigKeys`| Returns a Set of most recently refereshed key names | `Set` | No | |
 
 ### `source` object properties
 _All are optional unless otherwise noted_
@@ -64,10 +60,8 @@ _All are optional unless otherwise noted_
 | `client` | `Object`| | `{host:'127.0.0.1', port:6379}` | Parameters for the [node-redis](https://github.com/NodeRedis/node_redis#options-object-properties) client|
 | `client.module_override` | `Function` | | `undefined` | replaces built-in `require('node_redis')` (maybe a new branch, custom version you're using)|
 | `client.client_override` | `Function` | | `undefined` | Re-use an existing `node_redis` client instance rather than using its own. (used during testing with [redis-mock](https://github.com/yeahoffline/redis-mock))|
-| ~~`disableLocalKeyStorage`~~| `Boolean` | | `false` | Eliminate local keys storage - lower memory, less logic, faster startup, slight reduction in functionality | **Deprecated in v1.2.x** |
-| ~~`useBlockingKeyRefresh`~~| `Boolean` | | `false` | Use blocking `HKEYS` - see the [hkeys option](https://redis.io/commands/hkeys) for details | **Deprecated in v1.2.x** |
 | ~~`scanCount`~~| `String` | | 1000 | Number of subkeys scanned per `HSCAN` - see the [count option](https://redis.io/commands/scan#the-count-option) for details | **Deprecated in v1.2.x** |
-| ~~`refreshInterval`~~| `Integer`| | 15000 | Number of milliseconds between key refreshes | **Deprecated in v1.2.x** |
+| `refreshInterval`| `Integer`| | 15000 | Number of milliseconds between key refreshes | |
 
 ### Contributions & Development:
 Install with dev packages and run `yarn test` or `npm test`
