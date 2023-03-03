@@ -19,15 +19,15 @@ module.exports = class RedisConfigManager extends EventEmitter {
             listeners: {
                 debug: console.log,
                 ready: console.log,
-                error: console.error
-            }
+                error: console.error,
+            },
         };
         const redisDefaults = {
             host: '127.0.0.1',
             port: 6379,
             db: 0,
             module_override: undefined,
-            client_override: undefined
+            client_override: undefined,
         };
 
         this.redisParams = Object.assign({}, redisDefaults, params.client);
@@ -40,6 +40,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
         this.hashKey = `${this.options.hashKeyPrefix}${this.options.hashKey}`;
         this.activeConfigKeys = new Set([]);
         this.activeConfigKeysLastUpdate = null;
+        this.initKeyInterval;
     }
 
     async init() {
@@ -50,6 +51,11 @@ module.exports = class RedisConfigManager extends EventEmitter {
         await this.initKeyRefresh();
 
         this.emit('debug', '---> init completed');
+    }
+
+    stop() {
+        clearInterval(this.initKeyInterval);
+        this.emit('debug', '... stop completed');
     }
 
     initEventListeners() {
@@ -72,7 +78,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
 
         return new Promise((resolve, reject) => {
             this.redisClient
-                .on('error', error => {
+                .on('error', (error) => {
                     const msg = `Redis error => ${self.options.label} : ${error.message}`;
                     self.emit('error', msg);
                 })
@@ -80,8 +86,9 @@ module.exports = class RedisConfigManager extends EventEmitter {
                     if (this.options.db) {
                         self.redisClient.select(self.redisParams.db);
                     }
-                    let msg = `Redis connected => ${self.options.label} to redis://${self.redisClient.address ||
-                        'mock_redis_instance'}`;
+                    let msg = `Redis connected => ${self.options.label} to redis://${
+                        self.redisClient.address || 'mock_redis_instance'
+                    }`;
                     if (this.options.db > 0) {
                         msg += `/db${self.redisParams.db}`;
                     }
@@ -111,7 +118,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
     async initKeyRefresh() {
         const self = this;
         await self.keyRefresh();
-        setInterval(self.keyRefresh.bind(self), self.options.refreshInterval);
+        self.initKeyInterval = setInterval(self.keyRefresh.bind(self), self.options.refreshInterval);
     }
 
     async keyRefresh() {
@@ -136,7 +143,7 @@ module.exports = class RedisConfigManager extends EventEmitter {
         }
         const results = await this.cmd.hmget(this.hashKey, keys);
         this.emit('debug', `getConfigs ${this.hashKey}, ${keys}`);
-        return results.map(r => (r ? JSON.parse(r) : r));
+        return results.map((r) => (r ? JSON.parse(r) : r));
     }
 
     async setConfig(key, value) {

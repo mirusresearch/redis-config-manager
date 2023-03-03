@@ -25,10 +25,9 @@
         "printWidth": 115
     },
     "scripts": {
-        "test": "cross-env NODE_ENV=testing ava"
+        "test": "NODE_ENV=testing ava"
     },
     "devDependencies": {
-        "ava": "^2.3.0",
-        "cross-env": "^5.2.0"
+        "ava": "^2.3.0"
     }
 }
