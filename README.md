@@ -9,7 +9,7 @@ A thin nodejs API wrapper for [redis](https://redis.io/) used to store JSON seri
 - Uses [redis-mock](https://github.com/yeahoffline/redis-mock) for local testing without a redis instance
 
 ### Requirements:
-Tested on `NodeJS 8.x` and higher 
+Tested on `NodeJS 12.x` and higher
 
 ### Installation:
 Go into your
